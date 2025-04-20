@@ -1,0 +1,65 @@
+def read_matrix():
+    n = int(input("Введите размер квадратной матрицы (n): "))
+    print(f"Введите {n}x{n} матрицу построчно:")
+    matrix = []
+    for i in range(n):
+        while True:
+            row = input(f"Строка {i + 1}: ").split()
+            if len(row) == n:
+                matrix.append([float(x) for x in row])
+                break
+    return matrix
+
+
+def print_matrix(matrix, title="Матрица"):
+    print(f"\n{title}:")
+    for row in matrix:
+        print(" ".join(f"{x:10.4f}" for x in row))
+
+
+def inverse_matrix_gauss_jordan(A):
+    n = len(A)
+
+    augmented = [row[:] for row in A]
+    for i in range(n):
+        augmented[i] += [1.0 if j == i else 0.0 for j in range(n)]
+
+    for col in range(n):
+        max_row = col
+        for row in range(col + 1, n):
+            if abs(augmented[row][col]) > abs(augmented[max_row][col]):
+                max_row = row
+
+        augmented[col], augmented[max_row] = augmented[max_row], augmented[col]
+
+        if abs(augmented[col][col]) < 1e-10:
+            return None
+
+        pivot = augmented[col][col]
+        for j in range(col, 2 * n):
+            augmented[col][j] /= pivot
+
+        for i in range(n):
+            if i != col:
+                factor = augmented[i][col]
+                for j in range(col, 2 * n):
+                    augmented[i][j] -= factor * augmented[col][j]
+
+    return [row[n:] for row in augmented]
+
+
+def main():
+    print("Программа для нахождения обратной матрицы методом Гаусса-Жордана")
+
+    A = read_matrix()
+    print_matrix(A, "Исходная матрица")
+
+    A_inv = inverse_matrix_gauss_jordan(A)
+
+    if A_inv is None:
+        print("\nОбратной матрицы не существует!")
+    else:
+        print_matrix(A_inv, "Обратная матрица")
+
+if __name__ == "__main__":
+    main()
