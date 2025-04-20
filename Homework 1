@@ -1,0 +1,123 @@
+def print_matrix(matrix, title):
+    print(f"\n{title}:")
+    for row in matrix:
+        print([round(x, 3) for x in row])
+
+
+def input_equations():
+    print("Введите уравнения в формате: x + y + z = 7. Чтобы закончить ввод уравнений, введите 0.")
+    equations = []
+    while True:
+        eq = input("Введите уравнение: ").strip()
+        if eq == "0":
+            break
+        equations.append(eq)
+    return equations
+
+
+def parse_equation(eq):
+    left, right = eq.split('=')
+    right_val = float(right.strip())
+
+    left = left.replace('-', '+-').replace(' ', '')
+    terms = left.split('+')
+    terms = [t for t in terms if t]
+
+    variables = set()
+    for term in terms:
+        if 'x' in term:
+            variables.add('x')
+        if 'y' in term:
+            variables.add('y')
+        if 'z' in term:
+            variables.add('z')
+    variables = sorted(variables)
+
+    coeffs = {v: 0 for v in variables}
+
+    for term in terms:
+        if not any(c in term for c in variables):
+            right_val -= float(term)
+            continue
+
+        for v in variables:
+            if v in term:
+                part = term.split(v)[0]
+                if not part:
+                    coeff = 1.0
+                elif part == '-':
+                    coeff = -1.0
+                else:
+                    coeff = float(part)
+                coeffs[v] += coeff
+                break
+
+    return [coeffs[v] for v in variables], right_val
+
+
+def gaussian_elimination(coefficients, constants):
+    n = len(coefficients)
+    augmented = [coefficients[i] + [constants[i]] for i in range(n)]
+
+    print_matrix(augmented, "Исходная расширенная матрица")
+
+    for col in range(n):
+        max_row = col
+        for row in range(col + 1, n):
+            if abs(augmented[row][col]) > abs(augmented[max_row][col]):
+                max_row = row
+
+        augmented[col], augmented[max_row] = augmented[max_row], augmented[col]
+
+        if augmented[col][col] == 0:
+            print("\nСистема не имеет единственного решения!")
+            return None
+
+        pivot = augmented[col][col]
+        for j in range(col, n + 1):
+            augmented[col][j] /= pivot
+
+        for row in range(col + 1, n):
+            factor = augmented[row][col]
+            for j in range(col, n + 1):
+                augmented[row][j] -= factor * augmented[col][j]
+
+    print_matrix(augmented, "Upper-triangular matrix")
+
+    solutions = [0] * n
+    for i in range(n - 1, -1, -1):
+        solutions[i] = augmented[i][n]
+        for j in range(i + 1, n):
+            solutions[i] -= augmented[i][j] * solutions[j]
+        solutions[i] /= augmented[i][i]
+
+    return solutions
+
+
+def main():
+    print("Программа для решения системы линейных уравнений методом Гаусса.")
+    equations = input_equations()
+
+    coefficients = []
+    constants = []
+    variables = set()
+
+    for eq in equations:
+        coeffs, const = parse_equation(eq)
+        coefficients.append(coeffs)
+        constants.append(const)
+
+    if len(coefficients) != len(coefficients[0]):
+        print("Невозможно применить метод Гауса.")
+        return
+
+    solutions = gaussian_elimination(coefficients, constants)
+
+    if solutions is not None:
+        print("\nРешение системы:")
+        for i, sol in enumerate(solutions):
+            print(f"x{i + 1} = {round(sol, 3)}")
+
+
+if __name__ == "__main__":
+    main()
