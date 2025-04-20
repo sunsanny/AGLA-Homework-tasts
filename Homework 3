@@ -1,0 +1,38 @@
+rows = int(input("Число строк: "))
+cols = int(input("Число столбцов: "))
+print(f"Введите {rows}x{cols} матрицу:")
+M = [[float(x) for x in input().split()] for _ in range(rows)]
+
+def ref(M):
+    for i in range(min(len(M), len(M[0]))):
+        for j in range(i, len(M)):
+            if M[j][i] != 0:
+                M[i], M[j] = M[j], M[i]
+                break
+        else:
+            continue
+
+        pivot = M[i][i]
+        M[i] = [x / pivot for x in M[i]]
+
+        for j in range(i + 1, len(M)):
+            f = M[j][i]
+            M[j] = [M[j][k] - f * M[i][k] for k in range(len(M[0]))]
+    return M
+
+
+R = ref([row.copy() for row in M])
+pivots = [i for i in range(min(len(R), len(R[0]))) if i < len(R[0]) and R[i][i] != 0]
+
+print("\nColumn space:", [[row[i] for row in M] for i in pivots])
+print("Row space:", [row for row in R if any(x != 0 for x in row)])
+
+null_basis = []
+for i in range(len(R[0])):
+    if i not in pivots:
+        v = [0] * len(R[0])
+        v[i] = 1
+        for j in range(len(pivots)):
+            v[pivots[j]] = -R[j][i]
+        null_basis.append(v)
+print("Null space:", null_basis)
